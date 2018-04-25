@@ -15,12 +15,21 @@ namespace AzureKeyVaultManagedStorageSamples
             public static readonly string VaultLocation = "VaultLocation";
             public static readonly string ResourceGroupName = "ResourceGroupName";
             public static readonly string SubscriptionId = "SubscriptionId";
-            public static readonly string SPObjectId = "SPObjectId";
-            public static readonly string SPSecret = "SPSecret";
-            public static readonly string ApplicationId = "ApplicationId";
-            public static readonly string StorageAccountName = "StorageAccount";
+
+            // coordinates of the AD application used to access/manage the vault
+            public static readonly string VaultMgmtAppId = "ApplicationId";
+            public static readonly string VaultMgmtAppSecret = "ApplicationSecret";
+
+            // coordinates of storage account
+            public static readonly string StorageAccountName = "StorageAccountName";
+            public static readonly string StorageAccountResourceId = "StorageAccountResourceId";
         }
 
+        public static string WellKnownClientId
+        {
+            // Native AD app id with permissions in the subscription
+            get { return "54d5b1e9-5f5c-48f1-8483-d72471cbe7e7"; }
+        }
         /// <summary>
         /// Predetermined policies for retrying KeyVault-bound requests.
         /// </summary>

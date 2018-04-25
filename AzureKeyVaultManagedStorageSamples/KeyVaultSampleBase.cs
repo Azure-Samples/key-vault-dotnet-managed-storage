@@ -9,6 +9,7 @@ using Microsoft.Azure.KeyVault.Models;
 using Microsoft.Azure.Management.KeyVault;
 using Microsoft.Azure.Management.KeyVault.Models;
 using Microsoft.Rest;
+using Microsoft.Rest.Azure;
 
 namespace AzureKeyVaultManagedStorageSamples
 {
@@ -36,16 +37,17 @@ namespace AzureKeyVaultManagedStorageSamples
         /// Builds a sample object from the specified parameters.
         /// </summary>
         /// <param name="tenantId">Tenant id.</param>
-        /// <param name="objectId">AAD object id.</param>
         /// <param name="appId">AAD application id.</param>
-        /// <param name="appCredX5T">Thumbprint of certificate representing the AD application credential.</param>
+        /// <param name="appSecret">AAD application secret.</param>
         /// <param name="subscriptionId">Subscription id.</param>
         /// <param name="resourceGroupName">Resource group name.</param>
         /// <param name="vaultLocation">Vault location.</param>
         /// <param name="vaultName">Vault name.</param>
-        public KeyVaultSampleBase(string tenantId, string objectId, string appId, string appCredX5T, string subscriptionId, string resourceGroupName, string vaultLocation, string vaultName)
+        /// <param name="storageAccountName">Storage account name</param>
+        /// <param name="storageAccountResourceId">Storage account resource id.</param>
+        public KeyVaultSampleBase(string tenantId, string appId, string appSecret, string subscriptionId, string resourceGroupName, string vaultLocation, string vaultName, string storageAccountName, string storageAccountResourceId)
         {
-            InstantiateSample(tenantId, objectId, appId, appCredX5T, subscriptionId, resourceGroupName, vaultLocation, vaultName);
+            InstantiateSample(tenantId, appId, appSecret, subscriptionId, resourceGroupName, vaultLocation, vaultName, storageAccountName, storageAccountResourceId);
         }
 
         /// <summary>
@@ -55,30 +57,31 @@ namespace AzureKeyVaultManagedStorageSamples
         {
             // retrieve parameters from configuration
             var tenantId = ConfigurationManager.AppSettings[SampleConstants.ConfigKeys.TenantId];
-            var spObjectId = ConfigurationManager.AppSettings[SampleConstants.ConfigKeys.SPObjectId];
-            var spSecret = ConfigurationManager.AppSettings[SampleConstants.ConfigKeys.SPSecret];
-            var appId = ConfigurationManager.AppSettings[SampleConstants.ConfigKeys.ApplicationId];
+            var appSecret = ConfigurationManager.AppSettings[SampleConstants.ConfigKeys.VaultMgmtAppSecret];
+            var appId = ConfigurationManager.AppSettings[SampleConstants.ConfigKeys.VaultMgmtAppId];
             var subscriptionId = ConfigurationManager.AppSettings[SampleConstants.ConfigKeys.SubscriptionId];
             var resourceGroupName = ConfigurationManager.AppSettings[SampleConstants.ConfigKeys.ResourceGroupName];
             var vaultLocation = ConfigurationManager.AppSettings[SampleConstants.ConfigKeys.VaultLocation];
             var vaultName = ConfigurationManager.AppSettings[SampleConstants.ConfigKeys.VaultName];
+            var storageAccountName = ConfigurationManager.AppSettings[SampleConstants.ConfigKeys.StorageAccountName];
+            var storageAccountResourceId = ConfigurationManager.AppSettings[SampleConstants.ConfigKeys.StorageAccountResourceId];
 
-            InstantiateSample(tenantId, spObjectId, appId, spSecret, subscriptionId, resourceGroupName, vaultLocation, vaultName);
+            InstantiateSample(tenantId, appId, appSecret, subscriptionId, resourceGroupName, vaultLocation, vaultName, storageAccountName, storageAccountResourceId);
         }
 
-        private void InstantiateSample(string tenantId, string objectId, string appId, string appSecret, string subscriptionId, string resourceGroupName, string vaultLocation, string vaultName)
+        private void InstantiateSample(string tenantId, string appId, string appSecret, string subscriptionId, string resourceGroupName, string vaultLocation, string vaultName, string storageAccountName, string storageAccountResourceId)
         {
-            context = ClientContext.Build(tenantId, objectId, appId, subscriptionId, resourceGroupName, vaultLocation, vaultName);
+            context = ClientContext.Build(tenantId, appId, appSecret, subscriptionId, resourceGroupName, vaultLocation, vaultName, storageAccountName, storageAccountResourceId);
 
-            // log in with as the specified service principal
+            // log in with as the specified service principal for vault management operations
             var serviceCredentials = Task.Run(() => ClientContext.GetServiceCredentialsAsync(tenantId, appId, appSecret)).ConfigureAwait(false).GetAwaiter().GetResult();
 
             // instantiate the management client
             ManagementClient = new KeyVaultManagementClient(serviceCredentials);
             ManagementClient.SubscriptionId = subscriptionId;
 
-            // instantiate the data client
-            DataClient = new KeyVaultClient(ClientContext.AcquireTokenAsync);
+            // instantiate the data client, specifying the user-based access token retrieval callback
+            DataClient = new KeyVaultClient(ClientContext.AcquireUserAccessTokenAsync);
         }
 
         #region utilities
@@ -105,18 +108,50 @@ namespace AzureKeyVaultManagedStorageSamples
                 CreateMode = CreateMode.Default
             };
 
-            // add an access control entry for the test SP
-            properties.AccessPolicies.Add(new AccessPolicyEntry
-            {
-                TenantId = properties.TenantId,
-                ObjectId = context.ObjectId,
-                Permissions = new Permissions
-                {
-                    Secrets = new string[] { "get", "set", "list", "delete", "recover", "backup", "restore", "purge" },
-                }
-            });
-
+            // accessing managed storage account functionality requires a user identity
+            // since the login would have to be interactive, it is acceptable to expect that
+            // the user has been granted the required roles and permissions in preamble.
             return new VaultCreateOrUpdateParameters(vaultLocation, properties);
+        }
+
+        protected async Task<Vault> CreateOrRetrieveVaultAsync(string resourceGroupName, string vaultName, bool enableSoftDelete, bool enablePurgeProtection)
+        {
+            Vault vault = null;
+
+            try
+            {
+                // check whether the vault exists
+                Console.Write("Checking the existence of the vault...");
+                vault = await ManagementClient.Vaults.GetAsync(resourceGroupName, vaultName).ConfigureAwait(false);
+                Console.WriteLine("done.");
+            }
+            catch (CloudException ce)
+            {
+                if (ce.Response.StatusCode != HttpStatusCode.NotFound)
+                {
+                    Console.WriteLine("Unexpected exception encountered retrieving the vault: {0}", ce.Message);
+                    throw;
+                }
+
+                // create a new vault
+                var vaultParameters = CreateVaultParameters(resourceGroupName, vaultName, context.PreferredLocation, enableSoftDelete, enablePurgeProtection);
+
+                // create new soft-delete-enabled vault
+                Console.Write("Vault does not exist; creating...");
+                vault = await ManagementClient.Vaults.CreateOrUpdateAsync(resourceGroupName, vaultName, vaultParameters).ConfigureAwait(false);
+                Console.WriteLine("done.");
+
+                // wait for the DNS record to propagate; verify properties
+                Console.Write("Waiting for DNS propagation..");
+                Thread.Sleep(10 * 1000);
+                Console.WriteLine("done.");
+
+                Console.Write("Retrieving newly created vault...");
+                vault = await ManagementClient.Vaults.GetAsync(resourceGroupName, vaultName).ConfigureAwait(false);
+                Console.WriteLine("done.");
+            }
+
+            return vault;
         }
 
         /// <summary>
@@ -144,18 +179,9 @@ namespace AzureKeyVaultManagedStorageSamples
                 Console.WriteLine("The required recovery protection level is already enabled on vault {0}.", vaultName);
 
                 return;
-                //}
-
-                // check if this is an attempt to lower the recovery level.
-                //if (vault.Properties.EnablePurgeProtection
-                //    && !enablePurgeProtection)
-                //{
-                //    throw new InvalidOperationException("The recovery level on an existing vault cannot be lowered.");
-                //}
             }
 
             vault.Properties.EnableSoftDelete = true;
-            //vault.Properties.EnablePurgeProtection = enablePurgeProtection;
 
             // prepare the update operation on the vault
             var updateParameters = new VaultCreateOrUpdateParameters

@@ -38,6 +38,7 @@ Support for Azure Key Vault-managed storage account may be colloquially referred
     - an Azure Active Directory application, created in the tenant associated with the subscription, and with access to KeyVault; please see [Accessing Key Vault from a native application](https://blogs.technet.microsoft.com/kv/2016/09/17/accessing-key-vault-from-a-native-application) for details.
     - the credentials of the AAD application, in the form of a client secret
     - an Azure Storage account, which you have access to (for data and management)
+    - a user account, with List and Manage permissions to the storage account
     
 
 ### Installation
@@ -49,10 +50,10 @@ Follow these steps to get started with this sample:
 
 1. git clone https://github.com/Azure-Samples/key-vault-dotnet-managed-storage.git
 2. cd key-vault-dotnet-managed-storage
-4. edit the app.config file, specifying the tenant, subscription, AD app id, object id and client secret, and storage account
+4. edit the app.config file, specifying the tenant, subscription, AD app id and secret, and storage account and its resource id
 5. dotnet run --project AzureKeyVaultManagedStorageSamples\AzureKeyVaultManagedStorageSamples.csproj
 
-
+Note that storage account management requires a user account, and that the sample will interactively ask for a user login. 
 
 ## Demo
 

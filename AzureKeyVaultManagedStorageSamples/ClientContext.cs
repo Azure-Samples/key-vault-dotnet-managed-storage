@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Configuration;
 using System.Threading.Tasks;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.Rest;
@@ -13,25 +12,30 @@ namespace AzureKeyVaultManagedStorageSamples
     public sealed class ClientContext
     {
         private static ClientCredential _servicePrincipalCredential = null;
+        private static UserCredential _userCredential = null;
+        private static DeviceCodeResult _deviceCode = null;
 
         #region construction
-        public static ClientContext Build(string tenantId, string objectId, string appId, string subscriptionId, string resourceGroupName, string location, string vaultName)
+        public static ClientContext Build(string tenantId, string vaultMgmtAppId, string vaultMgmtAppSecret, string subscriptionId, string resourceGroupName, string location, string vaultName, string storageAccountName, string storageAccountResourceId)
         {
             if (String.IsNullOrWhiteSpace(tenantId)) throw new ArgumentException(nameof(tenantId));
-            if (String.IsNullOrWhiteSpace(objectId)) throw new ArgumentException(nameof(objectId));
-            if (String.IsNullOrWhiteSpace(appId)) throw new ArgumentException(nameof(appId));
+            if (String.IsNullOrWhiteSpace(vaultMgmtAppId)) throw new ArgumentException(nameof(vaultMgmtAppId));
+            if (String.IsNullOrWhiteSpace(vaultMgmtAppSecret)) throw new ArgumentException(nameof(vaultMgmtAppSecret));
             if (String.IsNullOrWhiteSpace(subscriptionId)) throw new ArgumentException(nameof(subscriptionId));
             if (String.IsNullOrWhiteSpace(resourceGroupName)) throw new ArgumentException(nameof(resourceGroupName));
+            if (String.IsNullOrWhiteSpace(storageAccountName)) throw new ArgumentException(nameof(storageAccountName));
+            if (String.IsNullOrWhiteSpace(storageAccountResourceId)) throw new ArgumentException(nameof(storageAccountResourceId)); 
 
             return new ClientContext
             {
                 TenantId = tenantId,
-                ObjectId = objectId,
-                ApplicationId = appId,
+                VaultMgmtApplicationId = vaultMgmtAppId,
                 SubscriptionId = subscriptionId,
                 ResourceGroupName = resourceGroupName,
                 PreferredLocation = location ?? "southcentralus",
-                VaultName = vaultName ?? "keyvaultsample"
+                VaultName = vaultName ?? "keyvaultsample",
+                StorageAccountName = storageAccountName,
+                StorageAccountResourceId = storageAccountResourceId
             };
         }
         #endregion
@@ -39,9 +43,7 @@ namespace AzureKeyVaultManagedStorageSamples
         #region properties
         public string TenantId { get; set; }
 
-        public string ObjectId { get; set; }
-
-        public string ApplicationId { get; set; }
+        public string VaultMgmtApplicationId { get; set; }
 
         public string SubscriptionId { get; set; }
 
@@ -50,6 +52,10 @@ namespace AzureKeyVaultManagedStorageSamples
         public string VaultName { get; set; }
 
         public string ResourceGroupName { get; set; }
+
+        public string StorageAccountName { get; set; }
+
+        public string StorageAccountResourceId { get; set; }
         #endregion
 
         #region authentication helpers
@@ -73,35 +79,31 @@ namespace AzureKeyVaultManagedStorageSamples
                 TokenCache.DefaultShared);
         }
 
-        /// <summary>
-        /// Generic ADAL Authentication callback
-        /// </summary>
-        public static async Task<string> AcquireTokenAsync(string authority, string resource, string scope)
+        public static void SetUserCredentials(string userName)
         {
-            if (_servicePrincipalCredential == null)
-            {
-                // read directly from config
-                var appId = ConfigurationManager.AppSettings[SampleConstants.ConfigKeys.ApplicationId];
-                var spSecret = ConfigurationManager.AppSettings[SampleConstants.ConfigKeys.SPSecret];
+            if (_userCredential != null)
+                return;
 
-                _servicePrincipalCredential = new ClientCredential(appId, spSecret);
-            }
-
-            AuthenticationContext ctx = new AuthenticationContext(authority, false, TokenCache.DefaultShared);
-            AuthenticationResult result = await ctx.AcquireTokenAsync(resource, _servicePrincipalCredential).ConfigureAwait(false);
-
-            return result.AccessToken;
+            _userCredential = new UserCredential(userName);
         }
 
-        /// <summary>
-        /// Generic authentication callback for a specific tenant
-        /// </summary>
-        /// <param name="tenantId">Identifier of tenant where authentication takes place.</param>
-        /// <returns>Authentication callback.</returns>
-        /// <remarks>Consider moving this class out from Controllers.Core into a separate top-level lib.</remarks>
-        public static Func<Task<string>> GetAuthenticationCallback(string authority, string resource, string scope)
+        public static async Task<string> AcquireUserAccessTokenAsync(string authority, string resource, string scope)
         {
-            return () => { return AcquireTokenAsync(authority, resource, scope); };
+            var context = new AuthenticationContext(authority, TokenCache.DefaultShared);
+            if (_deviceCode == null)
+            {
+                _deviceCode = await context.AcquireDeviceCodeAsync(resource, SampleConstants.WellKnownClientId).ConfigureAwait(false);
+
+                Console.WriteLine("############################################################################################");
+                Console.WriteLine("To continue with the test run, please do the following:");
+                Console.WriteLine($"1. Navigate to: {_deviceCode.VerificationUrl}");
+                Console.WriteLine($"2. Insert the following user code: {_deviceCode.UserCode}");
+                Console.WriteLine("3. Login with your username and password credentials.");
+                Console.WriteLine("############################################################################################");
+            }
+
+            var result = await context.AcquireTokenByDeviceCodeAsync(_deviceCode).ConfigureAwait(false);
+            return result.AccessToken;
         }
         #endregion
     }
