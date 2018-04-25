@@ -1,57 +1,72 @@
-# Project Name
+---
+services: key-vault
+platforms: dotnet
+author: dragav
+---
 
-(short, 1-3 sentenced, description of the project)
+# .Net SDK samples illustrating the management and consumption of Azure Key Vault-managed storage account keys.  
 
-## Features
+This repo contains sample code demonstrating the management and consumption of Azure Storage account keys via Azure Key Vault, using the [Azure .Net SDK](https://docs.microsoft.com/en-us/dotnet/api/overview/azure/key-vault?view=azure-dotnet). The scenarios covered by these samples include:
 
-This project framework provides the following features:
+* Setting up and managing a storage account in a key vault: adding, removing, backing up, restoring and recovering an account
+* Setting up and managing SAS token definitions in a key vault: adding, removing, backing up, restoring and recovering a SAS definition
+* Consuming a SAS token - obtaining it from Azure Key Vault, and using it to access an Azure Storage endpoint
 
-* Feature 1
-* Feature 2
-* ...
+Support for Azure Key Vault-managed storage account may be colloquially referred to as 'MSAK'; SAS stands for shared access signature. We assume reader familiarity with [Azure Storage](https://docs.microsoft.com/en-us/azure/storage/) in general, and [SAS tokens](https://docs.microsoft.com/en-us/azure/storage/common/storage-dotnet-shared-access-signature-part-1) in particular. 
+
+## Samples in this repo:
+
+* Add and delete a managed storage account
+* List and get existing managed storage accounts
+* Backup and restore, delete and recover a managed storage account; permanently delete a managed storage account in a soft-delete enabled vault
+* Set the storage account key regeneration period
+* Rotate on demand the active storage account key 
+* Add and delete a managed storage SAS definition; recover a deleted managed storage SAS definition
+* List and get existing managed storage SAS definitions
+* Obtain a SAS token from Azure Key Vault and use it to access an Azure Storage endpoint
 
 ## Getting Started
 
 ### Prerequisites
 
-(ideally very short, if any)
-
-- OS
-- Library version
-- ...
+- OS: Windows
+- SDKs:
+    - KeyVault data SDK: Microsoft.Azure.KeyVault ver. 3.0.0+
+- Azure:
+    - an active Azure subscription, in which you have the Key Vault Contributor role
+	- an Azure key vault
+    - an Azure Active Directory application, created in the tenant associated with the subscription, and with access to KeyVault; please see [Accessing Key Vault from a native application](https://blogs.technet.microsoft.com/kv/2016/09/17/accessing-key-vault-from-a-native-application) for details.
+    - the credentials of the AAD application, in the form of a client secret
+    - an Azure Storage account, which you have access to (for data and management)
+    
 
 ### Installation
 
-(ideally very short)
-
-- npm install [package name]
-- mvn install
-- ...
+- open the solution in Visual Studio - NuGet should resolve the necessary packages
 
 ### Quickstart
-(Add steps to get up and running quickly)
+Follow these steps to get started with this sample:
 
-1. git clone [repository clone url]
-2. cd [respository name]
-3. ...
+1. git clone https://github.com/Azure-Samples/key-vault-dotnet-managed-storage.git
+2. cd key-vault-dotnet-managed-storage
+4. edit the app.config file, specifying the tenant, subscription, AD app id, object id and client secret, and storage account
+5. dotnet run --project AzureKeyVaultManagedStorageSamples\AzureKeyVaultManagedStorageSamples.csproj
+
 
 
 ## Demo
 
-A demo app is included to show how to use the project.
-
-To run the demo, follow these steps:
-
-(Add steps to start up the demo)
-
-1.
-2.
-3.
 
 ## Resources
 
-(Any additional resources or related projects)
+Please see the following links for additional information:
 
-- Link to supporting information
-- Link to similar sample
-- ...
+- [Azure Storage overview](https://docs.microsoft.com/en-us/azure/storage/)
+- [Azure Storage SAS tokens](https://docs.microsoft.com/en-us/azure/storage/common/storage-dotnet-shared-access-signature-part-1)
+- [Azure Key Vault-managed storage accounts](https://docs.microsoft.com/en-us/azure/key-vault/key-vault-ovw-storage-keys)
+- [Azure Key Vault PowerShell reference](https://docs.microsoft.com/en-us/powershell/module/azurerm.keyvault/?view=azurermps-5.7.0)
+- [Azure Key Vault CLI reference](https://docs.microsoft.com/en-us/cli/azure/keyvault?view=azure-cli-latest)
+
+The following samples are also related:
+
+- []()
