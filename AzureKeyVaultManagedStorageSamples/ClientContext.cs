@@ -12,7 +12,6 @@ namespace AzureKeyVaultManagedStorageSamples
     public sealed class ClientContext
     {
         private static ClientCredential _servicePrincipalCredential = null;
-        private static UserCredential _userCredential = null;
         private static DeviceCodeResult _deviceCode = null;
 
         #region construction
@@ -77,14 +76,6 @@ namespace AzureKeyVaultManagedStorageSamples
                 _servicePrincipalCredential,
                 ActiveDirectoryServiceSettings.Azure,
                 TokenCache.DefaultShared);
-        }
-
-        public static void SetUserCredentials(string userName)
-        {
-            if (_userCredential != null)
-                return;
-
-            _userCredential = new UserCredential(userName);
         }
 
         public static async Task<string> AcquireUserAccessTokenAsync(string authority, string resource, string scope)
