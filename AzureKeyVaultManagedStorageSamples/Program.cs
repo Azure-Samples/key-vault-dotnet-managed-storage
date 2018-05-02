@@ -13,11 +13,17 @@ namespace AzureKeyVaultManagedStorageSamples
             // run managed storage account samples
             // MSAK management 
             Console.WriteLine("\n\n** Running storage account management sample..");
-            Task.Run(() => KeyVaultManagedStorageSamples.DemonstrateStorageAccountManagementAsync()).ConfigureAwait(false).GetAwaiter().GetResult();
+            Task.Run(() => KeyVaultManagedStorageSamples.DemonstrateStorageAccountManagementAsync())
+                .ConfigureAwait(false)
+                .GetAwaiter()
+                .GetResult();
 
             // SAS management and usage
             Console.WriteLine("\n\n** Running SAS definition sample..");
-            Task.Run(() => KeyVaultManagedStorageSamples.DemonstrateSASManagementAndUsageAsync()).ConfigureAwait(false).GetAwaiter().GetResult();
+            Task.Run(() => KeyVaultManagedStorageSamples.DemonstrateSASManagementAndUsageAsync())
+                .ConfigureAwait(false)
+                .GetAwaiter()
+                .GetResult();
         }
     }
 }

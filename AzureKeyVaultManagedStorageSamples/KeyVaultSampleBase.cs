@@ -9,7 +9,6 @@ using Microsoft.Azure.KeyVault.Models;
 using Microsoft.Azure.Management.KeyVault;
 using Microsoft.Azure.Management.KeyVault.Models;
 using Microsoft.Rest;
-using Microsoft.Rest.Azure;
 
 namespace AzureKeyVaultManagedStorageSamples
 {
@@ -125,80 +124,40 @@ namespace AzureKeyVaultManagedStorageSamples
                 vault = await ManagementClient.Vaults.GetAsync(resourceGroupName, vaultName).ConfigureAwait(false);
                 Console.WriteLine("done.");
             }
-            catch (CloudException ce)
+            catch (Exception e)
             {
-                if (ce.Response.StatusCode != HttpStatusCode.NotFound)
-                {
-                    Console.WriteLine("Unexpected exception encountered retrieving the vault: {0}", ce.Message);
-                    throw;
-                }
+                VerifyExpectedARMException(e, HttpStatusCode.NotFound);
+            }
 
+            if (vault == null)
+            {
                 // create a new vault
                 var vaultParameters = CreateVaultParameters(resourceGroupName, vaultName, context.PreferredLocation, enableSoftDelete, enablePurgeProtection);
 
-                // create new soft-delete-enabled vault
-                Console.Write("Vault does not exist; creating...");
-                vault = await ManagementClient.Vaults.CreateOrUpdateAsync(resourceGroupName, vaultName, vaultParameters).ConfigureAwait(false);
-                Console.WriteLine("done.");
+                try
+                {
+                    // create new soft-delete-enabled vault
+                    Console.Write("Vault does not exist; creating...");
+                    vault = await ManagementClient.Vaults.CreateOrUpdateAsync(resourceGroupName, vaultName, vaultParameters).ConfigureAwait(false);
+                    Console.WriteLine("done.");
 
-                // wait for the DNS record to propagate; verify properties
-                Console.Write("Waiting for DNS propagation..");
-                Thread.Sleep(10 * 1000);
-                Console.WriteLine("done.");
+                    // wait for the DNS record to propagate; verify properties
+                    Console.Write("Waiting for DNS propagation..");
+                    Thread.Sleep(10 * 1000);
+                    Console.WriteLine("done.");
 
-                Console.Write("Retrieving newly created vault...");
-                vault = await ManagementClient.Vaults.GetAsync(resourceGroupName, vaultName).ConfigureAwait(false);
-                Console.WriteLine("done.");
+                    Console.Write("Retrieving newly created vault...");
+                    vault = await ManagementClient.Vaults.GetAsync(resourceGroupName, vaultName).ConfigureAwait(false);
+                    Console.WriteLine("done.");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Unexpected exception encountered updating or retrieving the vault: {0}", e.Message);
+                    throw;
+                }
             }
 
             return vault;
-        }
-
-        /// <summary>
-        /// Enables soft delete on a pre-existing vault.
-        /// </summary>
-        /// <param name="resourceGroupName"></param>
-        /// <param name="vaultName"></param>
-        /// <returns></returns>
-        public async Task EnableRecoveryOptionsOnExistingVaultAsync(string resourceGroupName, string vaultName, bool enablePurgeProtection)
-        {
-            var vault = await ManagementClient.Vaults.GetAsync(resourceGroupName, vaultName).ConfigureAwait(false);
-
-            // First check if there is anything to do. The recovery levels are as follows:
-            // - no protection: soft delete = false
-            // - recoverable deletion: soft delete = true, purge protection = false
-            // - recoverable deletion, purge protected: soft delete = true, purge protection = true
-            //
-            // The protection level can be strengthened, but never weakened; we will throw on an attempt to lower it.
-            // 
-            if (vault.Properties.EnableSoftDelete.HasValue
-                && vault.Properties.EnableSoftDelete.Value)
-            {
-                //if (!(vault.Properties.EnablePurgeProtection ^ enablePurgeProtection))
-                //{
-                Console.WriteLine("The required recovery protection level is already enabled on vault {0}.", vaultName);
-
-                return;
-            }
-
-            vault.Properties.EnableSoftDelete = true;
-
-            // prepare the update operation on the vault
-            var updateParameters = new VaultCreateOrUpdateParameters
-            {
-                Location = vault.Location,
-                Properties = vault.Properties,
-                Tags = vault.Tags
-            };
-
-            try
-            {
-                vault = await ManagementClient.Vaults.CreateOrUpdateAsync(resourceGroupName, vaultName, updateParameters).ConfigureAwait(false);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Failed to update vault {0} in resource group {1}: {2}", vaultName, resourceGroupName, e.Message);
-            }
         }
 
         /// <summary>

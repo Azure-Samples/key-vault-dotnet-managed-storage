@@ -28,14 +28,22 @@ namespace AzureKeyVaultManagedStorageSamples
         public static string WellKnownClientId
         {
             // Native AD app id with permissions in the subscription
-            get { return "54d5b1e9-5f5c-48f1-8483-d72471cbe7e7"; }
+            // Consider fetching it from configuration.
+            get
+            {
+                return "54d5b1e9-5f5c-48f1-8483-d72471cbe7e7";
+            }
         }
 
         public static string SasTemplateUri
         {
             // sample access token, using https protocol, of sas type 'account', valid for all services (blob, file, queue and table) with all permissions (racupwdl).
-            // Obtained using standard Storage PowerShell cmdlets; alternatively, can be built following SAS syntax. See https://docs.microsoft.com/en-us/rest/api/storageservices/Constructing-an-Account-SAS
-            get { return "?sv=2017-07-29&sig=t2Mp26dSyExqffAu5q8omPKaxWNPxx5fqKJjbi8fIsQ%3D&spr=https&st=2018-04-25T01%3A24%3A24Z&se=2018-05-26T01%3A24%3A24Z&srt=sco&ss=bfqt&sp=racupwdl"; }
+            // Obtained using standard Storage PowerShell cmdlets; alternatively, can be built following SAS syntax. 
+            // See https://docs.microsoft.com/en-us/rest/api/storageservices/Constructing-an-Account-SAS for further details.
+            get
+            {
+                return "?sv=2017-07-29&sig=t2Mp26dSyExqffAu5q8omPKaxWNPxx5fqKJjbi8fIsQ%3D&spr=https&st=2018-04-25T01%3A24%3A24Z&se=2018-05-26T01%3A24%3A24Z&srt=sco&ss=bfqt&sp=racupwdl";
+            }
         }
 
         public enum SasType

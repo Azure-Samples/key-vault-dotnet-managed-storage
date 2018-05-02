@@ -12,7 +12,7 @@ namespace AzureKeyVaultManagedStorageSamples
     public sealed class ClientContext
     {
         private static ClientCredential _servicePrincipalCredential = null;
-        private static DeviceCodeResult _deviceCode = null;
+        private static DeviceCodeResult _deviceCodeResponse = null;
 
         #region construction
         public static ClientContext Build(string tenantId, string vaultMgmtAppId, string vaultMgmtAppSecret, string subscriptionId, string resourceGroupName, string location, string vaultName, string storageAccountName, string storageAccountResourceId)
@@ -81,19 +81,16 @@ namespace AzureKeyVaultManagedStorageSamples
         public static async Task<string> AcquireUserAccessTokenAsync(string authority, string resource, string scope)
         {
             var context = new AuthenticationContext(authority, TokenCache.DefaultShared);
-            if (_deviceCode == null)
+            if (_deviceCodeResponse == null)
             {
-                _deviceCode = await context.AcquireDeviceCodeAsync(resource, SampleConstants.WellKnownClientId).ConfigureAwait(false);
+                _deviceCodeResponse = await context.AcquireDeviceCodeAsync(resource, SampleConstants.WellKnownClientId).ConfigureAwait(false);
 
                 Console.WriteLine("############################################################################################");
-                Console.WriteLine("To continue with the test run, please do the following:");
-                Console.WriteLine($"1. Navigate to: {_deviceCode.VerificationUrl}");
-                Console.WriteLine($"2. Insert the following user code: {_deviceCode.UserCode}");
-                Console.WriteLine("3. Login with your username and password credentials.");
+                Console.WriteLine("To continue with the test run, please follow these instructions: {0}", _deviceCodeResponse.Message);
                 Console.WriteLine("############################################################################################");
             }
 
-            var result = await context.AcquireTokenByDeviceCodeAsync(_deviceCode).ConfigureAwait(false);
+            var result = await context.AcquireTokenByDeviceCodeAsync(_deviceCodeResponse).ConfigureAwait(false);
             return result.AccessToken;
         }
         #endregion
