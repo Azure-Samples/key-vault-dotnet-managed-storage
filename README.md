@@ -68,6 +68,4 @@ Please see the following links for additional information:
 - [Azure Key Vault PowerShell reference](https://docs.microsoft.com/en-us/powershell/module/azurerm.keyvault/?view=azurermps-5.7.0)
 - [Azure Key Vault CLI reference](https://docs.microsoft.com/en-us/cli/azure/keyvault?view=azure-cli-latest)
 
-The following samples are also related:
 
-- []()
