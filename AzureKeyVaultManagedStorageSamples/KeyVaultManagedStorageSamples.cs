@@ -327,8 +327,14 @@ namespace AzureKeyVaultManagedStorageSamples
 
                     // create sas: use a predefined SAS template uri, 1 hour validity
                     Console.Write("Creating a SAS definition...");
-                    var createdSasResponse = await sample.DataClient.SetSasDefinitionWithHttpMessagesAsync(vaultUri, managedStorageName,
-                        managedSasDefName, SampleConstants.SasTemplateUri, SampleConstants.SasType.account.ToString(), validityPeriod)
+                    var createdSasResponse = await sample.DataClient.SetSasDefinitionWithHttpMessagesAsync(
+                        vaultUri, 
+                        managedStorageName,
+                        managedSasDefName, 
+                        SampleConstants.SasTemplateUri, 
+                        SampleConstants.SasType.account.ToString(), 
+                        validityPeriod,
+                        new SasDefinitionAttributes { Enabled = true })
                         .ConfigureAwait(false);
                     Console.WriteLine("done.");
 
