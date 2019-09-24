@@ -4,11 +4,11 @@ languages:
 - csharp
 products:
 - azure
-description: "This repo contains sample code demonstrating the management and consumption of Azure Storage account keys via Azure Key Vault, using the Azure .Net SDK."
-urlFragment: key-vault-dotnet-managed-storage 
+description: "This repo contains sample code demonstrating the management and consumption of Azure Storage account keys via Azure Key Vault."
+urlFragment: net-sdk-keyvault-storage-keys
 ---
 
-# .Net SDK samples illustrating the management and consumption of Azure Key Vault-managed storage account keys.  
+# .NET SDK samples illustrating the management and consumption of Azure Key Vault-managed storage account keys.  
 
 This repo contains sample code demonstrating the management and consumption of Azure Storage account keys via Azure Key Vault, using the [Azure .Net SDK](https://docs.microsoft.com/en-us/dotnet/api/overview/azure/key-vault?view=azure-dotnet). The scenarios covered by these samples include:
 
