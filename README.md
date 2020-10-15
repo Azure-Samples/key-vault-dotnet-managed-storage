@@ -18,6 +18,11 @@ This repo contains sample code demonstrating the management and consumption of A
 
 Support for Azure Key Vault-managed storage account may be colloquially referred to as 'MSAK'; SAS stands for shared access signature. We assume reader familiarity with [Azure Storage](https://docs.microsoft.com/en-us/azure/storage/) in general, and [SAS tokens](https://docs.microsoft.com/en-us/azure/storage/common/storage-dotnet-shared-access-signature-part-1) in particular. 
 
+> ## [!NOTE]
+> Updated to track 2 package, there is a sample at https://docs.microsoft.com/en-us/samples/azure/azure-sdk-for-net/share-link/ that includes instructions for including generated client sources. 
+We recommend you use [role-based access control (RBAC)](https://docs.microsoft.com/azure/role-based-access-control/overview) to secure access to your storage accounts. You can centrally manage access for users and applications to resources in a way that is consistent across Azure, and [works with Azure Active Directory](https://docs.microsoft.com/azure/storage/common/storage-auth-aad).
+
+
 ## Samples in this repo:
 
 * Add and delete a managed storage account
