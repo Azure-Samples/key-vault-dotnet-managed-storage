@@ -31,21 +31,21 @@ Support for Azure Key Vault-managed storage account may be colloquially referred
 
 ## Use latest Key Vault SDK
 
-The Key Vault SDK in this repo is Microsoft.Azure.KeyVault. Now we recommend you use [role-based access control (RBAC)](https://docs.microsoft.com/azure/role-based-access-control/overview) to secure access to your storage accounts. There is no plans to ship a package for Key Vault-managed storage accounts since RBAC is recommended.
+The Key Vault SDK in this repo is Microsoft.Azure.KeyVault. Now it's recommended to use [role-based access control (RBAC)](https://docs.microsoft.com/azure/role-based-access-control/overview) to secure access to your storage accounts. 
 
-If you need support for managerd storage accounts, there is a[ShareLinkSample](https://github.com/Azure/azure-sdk-for-net/tree/master/sdkkeyvault/samples/sharelink) demonstrates a new way about how to generate aclient library for Azure Key Vault-managed storage accounts and use it togenerate Shared Access Signature (SAS) tokens to Storage blobs or files.
+[ShareLink](https://github.com/Azure/azure-sdk-for-net/tree/master/sdkkeyvault/samples/sharelink) demonstrates how to generate a client library for Azure Key Vault managed storage accounts and use it to generate Shared Access Signature (SAS) tokens to Storage blobs or files based on latest Key Vault SDK.
  
  
-- If you need support for managerd storage accounts, following below steps.
+- Following steps show how to use Azure Key Vault manage Storage.
 
 
-1. Before you can use this sample to create SAS tokens to share storage objects, you need to [register the storage account with Key Vault](https://docs.microsoft.com/samples/azure/azure-sdk-for-net/share-link/#getting-started).
-   - For step 4 in [register the storage account with Key Vault](https://docs.microsoft.com/samples/azure/azure-sdk-for-net/share-link/#getting-started), this sample needs to add more permissions(deletesas, recover, backup, restore, purge). Here's an example using the Azure CLI:
+1. [Register the storage account with Key Vault](https://docs.microsoft.com/samples/azure/azure-sdk-for-net/share-link/#getting-started).
+   - For step 4 in [register the storage account with Key Vault](https://docs.microsoft.com/samples/azure/azure-sdk-for-net/share-link/#getting-started), this sample needs to add more permissions (deletesas, recover, backup, restore, purge). Here's an example using the Azure CLI:
    ```bash
    az keyvault set-policy --name <KeyVaultName> --upn <user@domain.com> --storage-permissions get list set update regeneratekey getsas listsas setsas deletesas recover backup restore purge
    ```
-2. If you need support for managerd storage accounts, you should  [copy the ManagedStorageRestClient](https://docs.microsoft.com/samples/azure/azure-sdk-for-net/share-link/#building-the-sample)
-   - ManagedStorageRestClient has implemented the needed support for managerd storage accounts.
+2. [Copy the ManagedStorageRestClient for Azure Key Vault managed storage accounts](https://docs.microsoft.com/samples/azure/azure-sdk-for-net/share-link/#building-the-sample)
+   - ManagedStorageRestClient has implemented the needed supports for managed storage accounts.
 
 ## Getting Started
 
