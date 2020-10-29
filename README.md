@@ -29,12 +29,12 @@ Support for Azure Key Vault-managed storage account may be colloquially referred
 * List and get existing managed storage SAS definitions
 * Obtain a SAS token from Azure Key Vault and use it to access an Azure Storage endpoint
 
-## Use latest Key Vault SDK
+## Use the latest Key Vault SDK
 
-The Key Vault SDK in this repo for Azure Key Vault manages storage accounts is based on Microsoft.Azure.KeyVault. Now it's recommended to use [role-based access control (RBAC)](https://docs.microsoft.com/azure/role-based-access-control/overview) to secure access to your storage accounts.
+The Key Vault SDK previously used to manage storage accounts is based on Microsoft.Azure.KeyVault. We now recommended you use [role-based access control (RBAC)](https://docs.microsoft.com/azure/role-based-access-control/overview) to secure access to your storage accounts.
 [ShareLink](https://docs.microsoft.com/samples/azure/azure-sdk-for-net/share-link/) demonstrates how to generate a client library for Azure Key Vault manages storage accounts based on latest Key Vault SDK.
 
-[Notes] This sample needs permissions deletesas, recover, backup, restore update purge, so step 4 of **Getting Start** in [ShareLink](https://docs.microsoft.com/samples/azure/azure-sdk-for-net/share-link/) should be updated to the command like below in Azure CLI:
+Note that this sample needs permissions `deletesas`, `recover`, `backup`, `restore`, `update`, and  `purge`, so step 4 of **Getting Start** in [ShareLink](https://docs.microsoft.com/samples/azure/azure-sdk-for-net/share-link/) should be updated using the Azure CLI to the following command:
    ```bash
    az keyvault set-policy --name <KeyVaultName> --upn <user@domain.com> --storage-permissions get list set update regeneratekey getsas listsas setsas deletesas recover backup restore purge
    ```
